@@ -6,21 +6,21 @@ namespace KachinCleaner;
 internal sealed class MainForm : Form
 {
     private readonly ComboBox language = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 128 };
-    private readonly ListBox rootsList = new() { Dock = DockStyle.Fill, IntegralHeight = false };
-    private readonly DataGridView grid = new() { Dock = DockStyle.Fill, AllowUserToAddRows = false, AllowUserToDeleteRows = false, AutoGenerateColumns = false, RowHeadersVisible = false, SelectionMode = DataGridViewSelectionMode.FullRowSelect, MultiSelect = false, BackgroundColor = Color.White, BorderStyle = BorderStyle.FixedSingle, CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal, GridColor = Color.FromArgb(231, 236, 237), EnableHeadersVisualStyles = false };
-    private readonly Label titleLabel = new() { AutoSize = true, Font = new Font("Segoe UI", 19, FontStyle.Bold), ForeColor = Color.FromArgb(25, 43, 47) };
-    private readonly Label subtitleLabel = new() { AutoSize = true, ForeColor = Color.FromArgb(89, 106, 109) };
-    private readonly Label rootsLabel = new() { AutoSize = true, Font = new Font("Segoe UI", 10, FontStyle.Bold) };
-    private readonly Label resultsLabel = new() { AutoSize = true, Font = new Font("Segoe UI", 10, FontStyle.Bold) };
-    private readonly Label status = new() { AutoSize = true, ForeColor = Color.FromArgb(66, 86, 90) };
-    private readonly Label summary = new() { AutoSize = true, ForeColor = Color.FromArgb(66, 86, 90) };
+    private readonly ListBox rootsList = new() { Dock = DockStyle.Fill, IntegralHeight = false, BorderStyle = BorderStyle.FixedSingle, BackColor = Color.FromArgb(250, 252, 252), ForeColor = Color.FromArgb(38, 57, 61), Font = new Font("Segoe UI", 9.5f), ItemHeight = 25 };
+    private readonly DataGridView grid = new() { Dock = DockStyle.Fill, AllowUserToAddRows = false, AllowUserToDeleteRows = false, AutoGenerateColumns = false, RowHeadersVisible = false, SelectionMode = DataGridViewSelectionMode.FullRowSelect, MultiSelect = false, BackgroundColor = Color.White, BorderStyle = BorderStyle.None, CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal, GridColor = Color.FromArgb(232, 238, 237), EnableHeadersVisualStyles = false, AllowUserToResizeRows = false };
+    private readonly Label titleLabel = new() { AutoSize = true, Font = new Font("Segoe UI", 21, FontStyle.Bold), ForeColor = Color.White };
+    private readonly Label subtitleLabel = new() { AutoSize = true, ForeColor = Color.FromArgb(211, 239, 234) };
+    private readonly Label rootsLabel = new() { AutoSize = true, Font = new Font("Segoe UI", 11, FontStyle.Bold), ForeColor = Color.FromArgb(30, 54, 57), Margin = new Padding(0, 0, 0, 4) };
+    private readonly Label resultsLabel = new() { AutoSize = true, Font = new Font("Segoe UI", 11, FontStyle.Bold), ForeColor = Color.FromArgb(30, 54, 57), Margin = new Padding(0, 0, 0, 4) };
+    private readonly Label status = new() { AutoSize = true, ForeColor = Color.FromArgb(53, 91, 87), Font = new Font("Segoe UI", 9, FontStyle.Bold), Margin = new Padding(12, 5, 4, 0) };
+    private readonly Label summary = new() { AutoSize = true, ForeColor = Color.FromArgb(85, 103, 103), Margin = new Padding(8, 5, 4, 0) };
     private readonly Button addButton = new();
     private readonly Button removeButton = new();
     private readonly Button scanButton = new();
     private readonly Button deleteButton = new();
     private readonly CheckBox selectAll = new() { AutoSize = true };
-    private readonly TextBox issues = new() { Dock = DockStyle.Fill, Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Vertical, BorderStyle = BorderStyle.FixedSingle, BackColor = Color.White };
-    private readonly Label issuesLabel = new() { AutoSize = true, Font = new Font("Segoe UI", 9, FontStyle.Bold) };
+    private readonly TextBox issues = new() { Dock = DockStyle.Fill, Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Vertical, BorderStyle = BorderStyle.FixedSingle, BackColor = Color.FromArgb(250, 252, 251), ForeColor = Color.FromArgb(80, 96, 96), Font = new Font("Segoe UI", 9) };
+    private readonly Label issuesLabel = new() { AutoSize = true, Font = new Font("Segoe UI", 9, FontStyle.Bold), ForeColor = Color.FromArgb(92, 111, 109) };
     private bool chinese = true;
     private ScanResult? lastScan;
     private bool scanning;
@@ -32,10 +32,10 @@ internal sealed class MainForm : Form
     public MainForm()
     {
         Text = "Kachin Cleaner";
-        MinimumSize = new Size(760, 560);
-        Size = new Size(1040, 720);
+        MinimumSize = new Size(800, 600);
+        Size = new Size(1100, 760);
         StartPosition = FormStartPosition.CenterScreen;
-        BackColor = Color.FromArgb(246, 248, 248);
+        BackColor = Color.FromArgb(239, 245, 243);
         Font = new Font("Segoe UI", 9.5f);
         ForeColor = Color.FromArgb(33, 49, 52);
 
@@ -58,11 +58,14 @@ internal sealed class MainForm : Form
             UpdateDeleteEnabled();
         };
 
-        grid.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(237, 242, 242);
-        grid.ColumnHeadersDefaultCellStyle.ForeColor = Color.FromArgb(38, 59, 63);
+        grid.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(246, 249, 248);
+        grid.ColumnHeadersDefaultCellStyle.ForeColor = Color.FromArgb(54, 77, 76);
         grid.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 9, FontStyle.Bold);
-        grid.ColumnHeadersHeight = 36;
-        grid.RowTemplate.Height = 32;
+        grid.ColumnHeadersHeight = 40;
+        grid.RowTemplate.Height = 35;
+        grid.DefaultCellStyle.SelectionBackColor = Color.FromArgb(220, 241, 234);
+        grid.DefaultCellStyle.SelectionForeColor = Color.FromArgb(29, 67, 58);
+        grid.DefaultCellStyle.Padding = new Padding(4, 0, 4, 0);
         grid.Columns.Add(new DataGridViewCheckBoxColumn { Name = "Selected", Width = 48, ReadOnly = false, ThreeState = false });
         grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Path", AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill, MinimumWidth = 220, ReadOnly = true, SortMode = DataGridViewColumnSortMode.NotSortable });
         grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Size", Width = 120, ReadOnly = true, SortMode = DataGridViewColumnSortMode.NotSortable });
@@ -74,7 +77,7 @@ internal sealed class MainForm : Form
         };
         grid.CurrentCellDirtyStateChanged += (_, _) => { if (grid.IsCurrentCellDirty) grid.CommitEdit(DataGridViewDataErrorContexts.Commit); };
 
-        var header = new TableLayoutPanel { Dock = DockStyle.Top, Height = 94, Padding = new Padding(24, 12, 24, 8), ColumnCount = 2, RowCount = 2, BackColor = Color.White };
+        var header = new TableLayoutPanel { Dock = DockStyle.Top, Height = 112, Padding = new Padding(28, 16, 28, 14), ColumnCount = 2, RowCount = 2, BackColor = Color.FromArgb(16, 111, 101) };
         header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         header.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
         header.Controls.Add(titleLabel, 0, 0);
@@ -82,11 +85,17 @@ internal sealed class MainForm : Form
         header.Controls.Add(language, 1, 0);
         header.SetRowSpan(language, 2);
 
-        var rootPanel = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 2, Padding = new Padding(20, 14, 20, 10) };
-        rootPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 192));
+        language.FlatStyle = FlatStyle.Flat;
+        language.BackColor = Color.FromArgb(233, 246, 242);
+        language.ForeColor = Color.FromArgb(30, 76, 69);
+        language.Font = new Font("Segoe UI", 9, FontStyle.Bold);
+        language.Margin = new Padding(8, 8, 0, 0);
+        var rootPanel = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 2, Padding = new Padding(22, 16, 22, 14) };
+        rootPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 205));
         rootPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-        var rootSection = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 3, Padding = new Padding(0, 0, 0, 10) };
-        rootSection.RowStyles.Add(new RowStyle(SizeType.Absolute, 30));
+        var rootCard = new Panel { Dock = DockStyle.Fill, BackColor = Color.White, Padding = new Padding(16, 12, 16, 10), Margin = new Padding(0, 0, 0, 12) };
+        var rootSection = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 3, BackColor = Color.White };
+        rootSection.RowStyles.Add(new RowStyle(SizeType.Absolute, 32));
         rootSection.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         rootSection.RowStyles.Add(new RowStyle(SizeType.Absolute, 38));
         rootSection.Controls.Add(rootsLabel, 0, 0);
@@ -124,8 +133,11 @@ internal sealed class MainForm : Form
         issueSection.Controls.Add(issuesLabel, 0, 0);
         issueSection.Controls.Add(issues, 0, 1);
         resultsSection.Controls.Add(issueSection, 0, 3);
-        rootPanel.Controls.Add(rootSection, 0, 0);
-        rootPanel.Controls.Add(resultsSection, 0, 1);
+        rootCard.Controls.Add(rootSection);
+        var resultsCard = new Panel { Dock = DockStyle.Fill, BackColor = Color.White, Padding = new Padding(16, 12, 16, 12) };
+        resultsCard.Controls.Add(resultsSection);
+        rootPanel.Controls.Add(rootCard, 0, 0);
+        rootPanel.Controls.Add(resultsCard, 0, 1);
         Controls.Add(rootPanel);
         Controls.Add(header);
 
@@ -168,15 +180,16 @@ internal sealed class MainForm : Form
     private static void StyleButton(Button button, bool primary)
     {
         button.AutoSize = true;
-        button.Height = 30;
-        button.Padding = new Padding(10, 2, 10, 2);
+        button.Height = 34;
+        button.Padding = new Padding(12, 3, 12, 3);
         button.FlatStyle = FlatStyle.Flat;
         button.FlatAppearance.BorderSize = primary ? 0 : 1;
-        button.FlatAppearance.BorderColor = Color.FromArgb(198, 211, 212);
-        button.BackColor = primary ? Color.FromArgb(0, 116, 112) : Color.White;
-        button.ForeColor = primary ? Color.White : Color.FromArgb(38, 59, 63);
+        button.FlatAppearance.BorderColor = Color.FromArgb(216, 228, 224);
+        button.FlatAppearance.MouseOverBackColor = primary ? Color.FromArgb(12, 132, 119) : Color.FromArgb(241, 248, 245);
+        button.BackColor = primary ? Color.FromArgb(17, 119, 105) : Color.FromArgb(248, 251, 250);
+        button.ForeColor = primary ? Color.White : Color.FromArgb(39, 75, 67);
         button.Font = new Font("Segoe UI", 9, FontStyle.Bold);
-        button.Margin = new Padding(0, 0, 8, 0);
+        button.Margin = new Padding(0, 0, 9, 0);
     }
 
     private void AddRoot()
