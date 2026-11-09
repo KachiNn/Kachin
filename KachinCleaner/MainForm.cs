@@ -7,6 +7,7 @@ internal sealed class MainForm : Form
 {
     private readonly ComboBox language = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 128 };
     private readonly ListBox rootsList = new() { Dock = DockStyle.Fill, IntegralHeight = false, BorderStyle = BorderStyle.FixedSingle, BackColor = Color.FromArgb(250, 252, 252), ForeColor = Color.FromArgb(38, 57, 61), Font = new Font("Segoe UI", 9.5f), ItemHeight = 25 };
+    private readonly ToolTip rootPathTip = new() { InitialDelay = 350, ReshowDelay = 100, AutoPopDelay = 12000 };
     private readonly DataGridView grid = new() { Dock = DockStyle.Fill, AllowUserToAddRows = false, AllowUserToDeleteRows = false, AutoGenerateColumns = false, RowHeadersVisible = false, SelectionMode = DataGridViewSelectionMode.FullRowSelect, MultiSelect = false, BackgroundColor = Color.White, BorderStyle = BorderStyle.None, CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal, GridColor = Color.FromArgb(232, 238, 237), EnableHeadersVisualStyles = false, AllowUserToResizeRows = false };
     private readonly Label titleLabel = new() { AutoSize = true, Font = new Font("Segoe UI", 21, FontStyle.Bold), ForeColor = Color.White };
     private readonly Label subtitleLabel = new() { AutoSize = true, ForeColor = Color.FromArgb(211, 239, 234) };
@@ -32,8 +33,8 @@ internal sealed class MainForm : Form
     public MainForm()
     {
         Text = "Kachin Cleaner";
-        MinimumSize = new Size(800, 600);
-        Size = new Size(1100, 760);
+        MinimumSize = new Size(960, 640);
+        Size = new Size(1200, 800);
         StartPosition = FormStartPosition.CenterScreen;
         BackColor = Color.FromArgb(239, 245, 243);
         Font = new Font("Segoe UI", 9.5f);
@@ -66,7 +67,7 @@ internal sealed class MainForm : Form
         grid.DefaultCellStyle.SelectionBackColor = Color.FromArgb(220, 241, 234);
         grid.DefaultCellStyle.SelectionForeColor = Color.FromArgb(29, 67, 58);
         grid.DefaultCellStyle.Padding = new Padding(4, 0, 4, 0);
-        grid.Columns.Add(new DataGridViewCheckBoxColumn { Name = "Selected", Width = 48, ReadOnly = false, ThreeState = false });
+        grid.Columns.Add(new DataGridViewCheckBoxColumn { Name = "Selected", Width = 64, ReadOnly = false, ThreeState = false });
         grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Path", AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill, MinimumWidth = 220, ReadOnly = true, SortMode = DataGridViewColumnSortMode.NotSortable });
         grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Size", Width = 120, ReadOnly = true, SortMode = DataGridViewColumnSortMode.NotSortable });
         grid.CellValueChanged += (_, e) =>
@@ -77,69 +78,121 @@ internal sealed class MainForm : Form
         };
         grid.CurrentCellDirtyStateChanged += (_, _) => { if (grid.IsCurrentCellDirty) grid.CommitEdit(DataGridViewDataErrorContexts.Commit); };
 
-        var header = new TableLayoutPanel { Dock = DockStyle.Top, Height = 112, Padding = new Padding(28, 16, 28, 14), ColumnCount = 2, RowCount = 2, BackColor = Color.FromArgb(16, 111, 101) };
-        header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-        header.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-        header.Controls.Add(titleLabel, 0, 0);
-        header.Controls.Add(subtitleLabel, 0, 1);
-        header.Controls.Add(language, 1, 0);
-        header.SetRowSpan(language, 2);
+        BackColor = Color.FromArgb(248, 248, 246);
+        titleLabel.Font = new Font("Segoe UI", 15, FontStyle.Bold);
+        titleLabel.ForeColor = Color.FromArgb(40, 42, 42);
+        subtitleLabel.ForeColor = Color.FromArgb(115, 118, 116);
+        rootsList.BorderStyle = BorderStyle.None;
+        rootsList.HorizontalScrollbar = true;
+        rootsList.DrawMode = DrawMode.OwnerDrawFixed;
+        rootsList.DrawItem += (_, e) =>
+        {
+            if (e.Index < 0) return;
+            e.DrawBackground();
+            TextRenderer.DrawText(e.Graphics, Convert.ToString(rootsList.Items[e.Index]) ?? string.Empty, rootsList.Font, e.Bounds, rootsList.ForeColor, TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix);
+            e.DrawFocusRectangle();
+        };
+        rootsList.MouseMove += (_, e) =>
+        {
+            var index = rootsList.IndexFromPoint(e.Location);
+            rootPathTip.SetToolTip(rootsList, index >= 0 ? Convert.ToString(rootsList.Items[index]) : string.Empty);
+        };
+        grid.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(250, 250, 249);
+        selectAll.ForeColor = Color.FromArgb(92, 96, 94);
 
         language.FlatStyle = FlatStyle.Flat;
-        language.BackColor = Color.FromArgb(233, 246, 242);
-        language.ForeColor = Color.FromArgb(30, 76, 69);
-        language.Font = new Font("Segoe UI", 9, FontStyle.Bold);
-        language.Margin = new Padding(8, 8, 0, 0);
-        var rootPanel = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 2, Padding = new Padding(22, 16, 22, 14) };
-        rootPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 205));
-        rootPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-        var rootCard = new Panel { Dock = DockStyle.Fill, BackColor = Color.White, Padding = new Padding(16, 12, 16, 10), Margin = new Padding(0, 0, 0, 12) };
-        var rootSection = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 3, BackColor = Color.White };
-        rootSection.RowStyles.Add(new RowStyle(SizeType.Absolute, 32));
+        language.BackColor = Color.FromArgb(247, 247, 245);
+        language.ForeColor = Color.FromArgb(73, 77, 75);
+        language.Font = new Font("Segoe UI", 9);
+        language.Width = 88;
+        language.Margin = new Padding(8, 0, 0, 0);
+
+        var shell = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 1, BackColor = Color.White };
+        shell.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 280));
+        shell.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        var sidebar = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 5, Padding = new Padding(14, 16, 14, 14), BackColor = Color.FromArgb(246, 246, 244) };
+        sidebar.RowStyles.Add(new RowStyle(SizeType.Absolute, 44));
+        sidebar.RowStyles.Add(new RowStyle(SizeType.Absolute, 42));
+        sidebar.RowStyles.Add(new RowStyle(SizeType.Absolute, 34));
+        sidebar.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        sidebar.RowStyles.Add(new RowStyle(SizeType.Absolute, 82));
+        var brand = new Panel { Dock = DockStyle.Fill, BackColor = Color.FromArgb(246, 246, 244) };
+        var brandMark = new Panel { Size = new Size(24, 24), Location = new Point(2, 7), BackColor = Color.FromArgb(35, 115, 96) };
+        var brandText = new Label { AutoSize = true, Text = "Kachin Cleaner", Font = new Font("Segoe UI", 11, FontStyle.Bold), ForeColor = Color.FromArgb(45, 48, 47), Location = new Point(36, 8) };
+        brand.Controls.Add(brandMark);
+        brand.Controls.Add(brandText);
+        var scanNav = new Button { Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft, Padding = new Padding(10, 0, 0, 0), Text = chinese ? "⌕   新建扫描" : "⌕   New scan", FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(235, 236, 233), ForeColor = Color.FromArgb(54, 58, 56), Font = new Font("Segoe UI", 9, FontStyle.Bold), Cursor = Cursors.Hand };
+        scanNav.FlatAppearance.BorderSize = 0;
+        scanNav.Click += async (_, _) => await ScanAsync();
+        var locationHeader = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 1 };
+        locationHeader.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        locationHeader.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+        locationHeader.Controls.Add(rootsLabel, 0, 0);
+        locationHeader.Controls.Add(language, 1, 0);
+        var rootSection = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 2 };
         rootSection.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         rootSection.RowStyles.Add(new RowStyle(SizeType.Absolute, 38));
-        rootSection.Controls.Add(rootsLabel, 0, 0);
-        rootSection.Controls.Add(rootsList, 0, 1);
-        var rootButtons = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.LeftToRight, WrapContents = false, Padding = new Padding(0, 4, 0, 0) };
+        rootSection.Controls.Add(rootsList, 0, 0);
+        var rootButtons = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.LeftToRight, WrapContents = false, Padding = new Padding(0, 3, 0, 0) };
         rootButtons.Controls.Add(addButton);
         rootButtons.Controls.Add(removeButton);
-        rootSection.Controls.Add(rootButtons, 0, 2);
+        rootSection.Controls.Add(rootButtons, 0, 1);
+        var sidebarFooter = new Panel { Dock = DockStyle.Fill, BackColor = Color.FromArgb(246, 246, 244) };
+        var footerLine = new Panel { Dock = DockStyle.Top, Height = 1, BackColor = Color.FromArgb(226, 227, 224) };
+        var footerText = new Label { AutoSize = true, Text = "TEMP FILE CLEANUP", Font = new Font("Segoe UI", 8, FontStyle.Bold), ForeColor = Color.FromArgb(143, 147, 143), Location = new Point(2, 16) };
+        sidebarFooter.Controls.Add(footerText);
+        sidebarFooter.Controls.Add(footerLine);
+        sidebar.Controls.Add(brand, 0, 0);
+        sidebar.Controls.Add(scanNav, 0, 1);
+        sidebar.Controls.Add(locationHeader, 0, 2);
+        sidebar.Controls.Add(rootSection, 0, 3);
+        sidebar.Controls.Add(sidebarFooter, 0, 4);
 
-        var resultsSection = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 4 };
-        resultsSection.RowStyles.Add(new RowStyle(SizeType.Absolute, 34));
-        resultsSection.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-        resultsSection.RowStyles.Add(new RowStyle(SizeType.Absolute, 37));
-        resultsSection.RowStyles.Add(new RowStyle(SizeType.Absolute, 118));
-        var resultHeading = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 1 };
+        var workspace = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 2, BackColor = Color.White };
+        workspace.RowStyles.Add(new RowStyle(SizeType.Absolute, 54));
+        workspace.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        var topbar = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 1, Padding = new Padding(22, 0, 22, 0), BackColor = Color.White };
+        topbar.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        topbar.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+        var topbarLine = new Panel { Dock = DockStyle.Bottom, Height = 1, BackColor = Color.FromArgb(235, 236, 233) };
+        var pageTitle = new Label { Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft, Text = chinese ? "清理工作区" : "Cleanup workspace", Font = new Font("Segoe UI", 10, FontStyle.Bold), ForeColor = Color.FromArgb(58, 61, 59) };
+        topbar.Controls.Add(pageTitle, 0, 0);
+        topbar.Controls.Add(subtitleLabel, 1, 0);
+        topbar.Controls.Add(topbarLine);
+        var content = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 4, Padding = new Padding(26, 24, 26, 20), BackColor = Color.White };
+        content.RowStyles.Add(new RowStyle(SizeType.Absolute, 58));
+        content.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        content.RowStyles.Add(new RowStyle(SizeType.Absolute, 54));
+        content.RowStyles.Add(new RowStyle(SizeType.Absolute, 128));
+        titleLabel.Dock = DockStyle.Fill;
+        var resultHeading = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 1, BackColor = Color.White };
         resultHeading.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         resultHeading.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-        resultHeading.Controls.Add(resultsLabel, 0, 0);
+        resultHeading.Controls.Add(titleLabel, 0, 0);
         resultHeading.Controls.Add(selectAll, 1, 0);
-        resultsSection.Controls.Add(resultHeading, 0, 0);
-        resultsSection.Controls.Add(grid, 0, 1);
-        var actions = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 4, RowCount = 1, Padding = new Padding(0, 4, 0, 0) };
+        content.Controls.Add(resultHeading, 0, 0);
+        content.Controls.Add(grid, 0, 1);
+        var actions = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 4, RowCount = 1, Padding = new Padding(0, 8, 0, 0) };
         actions.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-        actions.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 55));
-        actions.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 45));
+        actions.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
+        actions.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
         actions.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
         actions.Controls.Add(scanButton, 0, 0);
         actions.Controls.Add(status, 1, 0);
         actions.Controls.Add(summary, 2, 0);
         actions.Controls.Add(deleteButton, 3, 0);
-        resultsSection.Controls.Add(actions, 0, 2);
-        var issueSection = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 2 };
-        issueSection.RowStyles.Add(new RowStyle(SizeType.Absolute, 24));
+        content.Controls.Add(actions, 0, 2);
+        var issueSection = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 2, BackColor = Color.White };
+        issueSection.RowStyles.Add(new RowStyle(SizeType.Absolute, 26));
         issueSection.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         issueSection.Controls.Add(issuesLabel, 0, 0);
         issueSection.Controls.Add(issues, 0, 1);
-        resultsSection.Controls.Add(issueSection, 0, 3);
-        rootCard.Controls.Add(rootSection);
-        var resultsCard = new Panel { Dock = DockStyle.Fill, BackColor = Color.White, Padding = new Padding(16, 12, 16, 12) };
-        resultsCard.Controls.Add(resultsSection);
-        rootPanel.Controls.Add(rootCard, 0, 0);
-        rootPanel.Controls.Add(resultsCard, 0, 1);
-        Controls.Add(rootPanel);
-        Controls.Add(header);
+        content.Controls.Add(issueSection, 0, 3);
+        workspace.Controls.Add(topbar, 0, 0);
+        workspace.Controls.Add(content, 0, 1);
+        shell.Controls.Add(sidebar, 0, 0);
+        shell.Controls.Add(workspace, 1, 0);
+        Controls.Add(shell);
 
         StyleButton(addButton, false);
         StyleButton(removeButton, false);
@@ -147,6 +200,7 @@ internal sealed class MainForm : Form
         StyleButton(deleteButton, true);
         var defaultRoot = TempScanner.GetDefaultTempRoot(out var issue);
         if (!string.IsNullOrWhiteSpace(defaultRoot)) rootsList.Items.Add(defaultRoot);
+        UpdateRootsExtent();
         if (!string.IsNullOrWhiteSpace(issue))
         {
             rawIssues = new[] { issue };
@@ -158,12 +212,12 @@ internal sealed class MainForm : Form
     private void ApplyLanguage()
     {
         Text = chinese ? "Kachin Cleaner | 临时文件清理" : "Kachin Cleaner | Temporary File Cleanup";
-        titleLabel.Text = chinese ? "Kachin Cleaner" : "Kachin Cleaner";
-        subtitleLabel.Text = chinese ? "检查临时文件，再明确选择要删除的内容" : "Review temporary files, then choose exactly what to remove";
+        titleLabel.Text = chinese ? "临时文件" : "Temporary files";
+        subtitleLabel.Text = chinese ? "安全扫描 · 手动清理" : "Safe scan · manual cleanup";
         rootsLabel.Text = chinese ? "扫描位置" : "Scan locations";
         resultsLabel.Text = chinese ? "扫描结果" : "Scan results";
-        addButton.Text = chinese ? "+  添加文件夹" : "+  Add folder";
-        removeButton.Text = chinese ? "移除所选位置" : "Remove location";
+        addButton.Text = chinese ? "+ 添加" : "+ Add";
+        removeButton.Text = chinese ? "移除" : "Remove";
         scanButton.Text = chinese ? "开始扫描" : "Scan";
         deleteButton.Text = chinese ? "删除勾选文件" : "Delete checked files";
         selectAll.Text = chinese ? "全选文件" : "Select all files";
@@ -171,7 +225,7 @@ internal sealed class MainForm : Form
         status.Text = scanning ? (progressMessage is null ? (chinese ? "正在扫描..." : "Scanning...") : LocalizeProgress(progressMessage)) : deletionFinished ? (chinese ? "删除操作已结束。" : "Deletion finished.") : lastScan is null ? (chinese ? "扫描不会更改文件。" : "Scanning does not change files.") : (chinese ? "扫描完成；未更改任何文件。" : "Scan complete; no files were changed.");
         issues.Lines = rawIssues.Select(LocalizeIssue).ToArray();
         summary.Text = lastScan is null ? (chinese ? "尚未扫描" : "Not scanned") : chinese ? $"共 {lastScan.Files.Count:N0} 个文件 · {FormatSize(lastScan.Files.Sum(f => f.Bytes))} · 问题 {lastScan.Issues.Count:N0} 项" : $"{lastScan.Files.Count:N0} files · {FormatSize(lastScan.Files.Sum(f => f.Bytes))} · {lastScan.Issues.Count:N0} issues";
-        grid.Columns[0].HeaderText = chinese ? "选择" : "Keep?";
+        grid.Columns[0].HeaderText = chinese ? "选" : "Pick";
         grid.Columns[1].HeaderText = chinese ? "完整文件路径" : "Full file path";
         grid.Columns[2].HeaderText = chinese ? "大小" : "Size";
         UpdateDeleteEnabled();
@@ -203,11 +257,21 @@ internal sealed class MainForm : Form
         }
         var full = Path.GetFullPath(dialog.SelectedPath);
         if (!rootsList.Items.Cast<string>().Any(p => string.Equals(Path.GetFullPath(p), full, StringComparison.OrdinalIgnoreCase))) rootsList.Items.Add(full);
+        UpdateRootsExtent();
     }
 
     private void RemoveRoot()
     {
         if (rootsList.SelectedIndex >= 0) rootsList.Items.RemoveAt(rootsList.SelectedIndex);
+        UpdateRootsExtent();
+    }
+
+    private void UpdateRootsExtent()
+    {
+        rootsList.HorizontalExtent = rootsList.Items.Cast<string>()
+            .Select(path => TextRenderer.MeasureText(path, rootsList.Font).Width)
+            .DefaultIfEmpty(0)
+            .Max() + 16;
     }
 
     private async Task ScanAsync()
